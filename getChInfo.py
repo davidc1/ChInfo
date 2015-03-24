@@ -38,12 +38,13 @@ class lartfpos:
 
 # Defining a class for the info on a LArTF Channel itself
 class larchan:
-    def __init__(self,larch,crate,femch,larwire,plane):
+    def __init__(self,larch,crate,slot,femch,larwire,plane):
         self.larch  = larch
-        self.crate = 0
-        self.femch = 0
-        self.larwire = 0
-        self.plane = 0
+        self.crate = crate
+        self.slot = slot
+        self.femch = femch
+        self.larwire = larwire
+        self.plane = plane
         self.length = 0
         self.noise = []
         self.ampgain = []
@@ -61,6 +62,20 @@ class larchan:
     def setgainfact(self,fact):
         self.gainfact = fact
     # Getters
+    def getlarch(self):
+        return self.larch
+    def getcrate(self):
+        return self.crate
+    def getslot(self):
+        return self.slot
+    def getfemch(self):
+        return self.femch
+    def getCSF(self):
+        return [self.crate,self.slot,self.femch]
+    def getwire(self):
+        return sef.larwire
+    def getplane(self):
+        return self.plane
     def getlength(self):
         return self.length
     def getampgain(self,gain,shaping):
@@ -136,7 +151,7 @@ class ChanInfo():
                 # Set [crate,slot,femch] position for dictonary
                 thischan = lartfpos(ch['crate'][i],ch['slot'][i],ch['femch'][i])
                 # now create larsoft wire object
-                thislar = larchan(ch['larch'][i],ch['crate'][i],ch['femch'][i],ch['larwire'][i],ch['plane'][i])
+                thislar = larchan(ch['larch'][i],ch['crate'][i],ch['slot'][i],ch['femch'][i],ch['larwire'][i],ch['plane'][i])
                 thislar.setlength(ch['length'][i])
                 thisnoise = [ [ch['rms01'][i],ch['rms03'][i]], [ch['rms11'][i],ch['rms13'][i]], [ch['rms21'][i],ch['rms23'][i]], [ch['rms31'][i],ch['rms33'][i]] ]
                 thisamp   = [ [ch['amp01'][i],ch['amp03'][i]], [ch['amp11'][i],ch['amp13'][i]], [ch['amp21'][i],ch['amp23'][i]], [ch['amp31'][i],ch['amp33'][i]] ]
@@ -173,7 +188,28 @@ class ChanInfo():
             return self.lardict[v][x]
         except ValueError as detail:
             print "Error: ",detail
-        
+
+    def getlarchnum(self,crate,slot,femch,r=100):
+        try:
+            x,v = self.isinputvalid(crate,slot,femch,r)
+            return self.lardict[v][x].getlarch()
+        except ValueError as detail:
+            print "Error: ",detail
+
+    def getwirenum(self,crate,slot,femch,r=100):
+        try:
+            x,v = self.isinputvalid(crate,slot,femch,r)
+            return self.lardict[v][x].getwire()
+        except ValueError as detail:
+            print "Error: ",detail
+
+    def getplane(self,crate,slot,femch,r=100):
+        try:
+            x,v = self.isinputvalid(crate,slot,femch,r)
+            return self.lardict[v][x].getplane()
+        except ValueError as detail:
+            print "Error: ",detail
+
     def getlength(self,crate,slot,femch,r=100):
         try:
             x,v = self.isinputvalid(crate,slot,femch,r)
