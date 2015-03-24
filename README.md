@@ -4,7 +4,7 @@
    * numpy
 
 ## Load tool
-'''
+```
 ipython
 import getChInfo
 chinfo = getChInfo.ChanInfo()
@@ -14,7 +14,7 @@ lchan.getnoise(0,0)
 chinfo.getlength(5,6,2)
 chinfo.getnoise(5,6,2,0,0)
 chinfo.getnoise(5,6,2,0,0,5)
-'''
+```
 
 ## Get LArSoft Channel
 Use getlarch(crate,slot,femch) function to get a "larchan" object
@@ -33,19 +33,19 @@ a "larchan" object contains:
 - ampgain (same)
 - areagain (same)
 - gainfact (fraction of charge the channel sees from the pulser. 1 or 8/7)
-'''
+```
 lchan = chinfo.getlarch(5,5,31)
 lchan.getlength()
 lchan.getnoise(0,0)
 lchan.getampgain(1,1)
-'''
+```
 
 ## Get Channel Information
 The "larchan" object does not need to be called directly:
-'''
+```
 chinfo.getlength(5,5,31)
 chinfo.getampgain(5,5,31,0,0)
-'''
+```
 
 ## Cable Mapping Backwards Compatibility
 Getter functions for ChanInfo can take an optional 'run number'
@@ -55,7 +55,7 @@ that run.
 If no run number is specified the current (3/24/2015) cable
 positions will be used.
 Example:
-'''
+```
 chinfo.getlength(5,5,31)
 chinfo.getlength(5,5,31,25)
 lchan = chinfo.getlarch(5,5,31)
