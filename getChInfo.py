@@ -119,6 +119,8 @@ class ChanInfo():
             success += 1
         # dictionary mapping [crate,slot,femch] -> LArSoft Channel
         self.lardict = [{},{},{}]
+        # dictionary mapping LArSoft Channel num to larsoft wire object
+        self.chandict = {}
         if (success == 3):
             self.makeDictionary()
 
@@ -162,6 +164,7 @@ class ChanInfo():
                 thislar.setgainfact(ch['gainnorm'][i])
                 # Add to dictionary
                 self.lardict[n][thischan] = thislar
+                self.chandict[thislar.larch] = thislar
             del ch
             infile.close()
         print "done filling dictionary!"
@@ -244,3 +247,11 @@ class ChanInfo():
             return self.lardict[v][x].getgainfact()
         except ValueError as detail:
             print "Error: ",detail
+
+    def getCSF(self,larch):
+        if (larch in self.chandict):
+            chch = self.chandict[larch]
+            return [chch.crate,chch.slot,chch.femch]
+        else:
+            print "Channel not found!"
+    
