@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 import os,sys
 import warnings
 
@@ -117,6 +118,9 @@ class ChanInfo():
         if ((os.path.isfile('fnal_map_oldest.txt'))==True):
             self.fname[2] = 'fnal_map_oldest.txt'
             success += 1
+        # dictionary for bad channels: [crate,slot,femch] -> [ [Run #, RMS], [Run #, RMS], ... ]
+        self.baddict = {}
+        self.makeBadList()
         # dictionary mapping [crate,slot,femch] -> LArSoft Channel
         self.lardict = [{},{},{}]
         # dictionary mapping LArSoft Channel num to larsoft wire object
@@ -168,6 +172,58 @@ class ChanInfo():
             del ch
             infile.close()
         print "done filling dictionary!"
+
+
+    def makeBadList(self):
+
+        # Start by compiling list of run/subrun numbers to be scanned
+        run = [ [ 2, 0, 9 ], [ 3, 0, 9 ], [ 5 ], [ 5, 0, 15 ], [ 28, 0, 10 ], [ 62, 0, 14 ], [ 83, 0, 10 ], [ 84, 0, 16 ], [ 95, 0, 19 ], [ 95, 44, 55 ], [ 95, 67, 76 ], [ 95, 85, 94 ], [ 95, 100, 109 ], [ 95, 120, 132 ], [ 95, 157, 166 ], [ 95, 174, 187 ], [ 95, 198, 207 ], [ 114, 0, 20 ], [ 114, 110, 130 ], [ 114, 275, 295 ], [ 114, 400, 420 ], [ 114, 640, 660 ], [ 114, 755, 775 ], [ 114, 865, 885 ], [ 115, 110, 130 ], [ 115, 220, 240 ], [ 115, 365, 385 ], [ 115, 475, 495 ], [ 115, 620, 640 ], [ 115, 850, 870 ], [ 115, 980, 1000 ], [ 117, 0, 20 ], [ 117, 115, 135 ], [ 119, 0, 20 ], [ 119, 110, 130 ], [ 119, 230, 250 ], [ 119, 350, 370 ], [ 121, 0, 20 ], [ 126, 0, 11 ], [ 128, 0, 14 ], [ 130, 0, 8 ], [ 131, 0, 11 ], [ 131, 14, 25 ], [ 131, 28, 37 ], [ 131, 42, 52 ], [ 131, 55, 67 ], [ 134, 0, 10 ] ]
+        # then open the respective files:
+        for i in run:
+            if len(i) == 1:
+                run_name = 'run{:03d}'.format(i[0])
+            else:
+                run_name = 'run{:03d}_subrun{:03d}_{:03d}'.format(i[0],i[1],i[2])
+
+            fname_high = './badchans/{}_high.dat'.format(run_name)
+            fname_low  = './badchans/{}_low.dat'.format(run_name)
+
+            if ((os.path.isfile(fname_high))==True):
+                # High noise channels
+                run = int(i[0])
+                fin_high = open(fname_high)
+                for line in fin_high:
+                    vals = line.split(" ")
+                    crate = int(vals[0])
+                    slot  = int(vals[1])
+                    femch = int(vals[2])
+                    rms   = float(vals[3])
+                    badinfo = [run,rms]
+                    thispos = lartfpos(crate,slot,femch)
+                    if ( (thispos in self.baddict) == True ):
+                        self.baddict[thispos].append(badinfo)
+                    else:
+                        self.baddict[thispos] = [badinfo]
+                fin_high.close()
+            if ((os.path.isfile(fname_low))==True):
+                # Low noise channels
+                fin_low = open(fname_low)
+                for line in fin_low:
+                    vals = line.split(" ")
+                    crate = int(vals[0])
+                    slot  = int(vals[1])
+                    femch = int(vals[2])
+                    rms   = float(vals[3])
+                    badinfo = [run,rms]
+                    thispos = lartfpos(crate,slot,femch)
+                    if ( (thispos in self.baddict) == True ):
+                        self.baddict[thispos].append(badinfo)
+                    else:
+                        self.baddict[thispos] = [badinfo]
+                fin_low.close()
+
+        print "Done filling bad channel list! Number of entries: ",len(self.baddict)
+
 
 
     def isinputvalid(self,crate,slot,femch,r):
@@ -255,3 +311,33 @@ class ChanInfo():
         else:
             print "Channel not found!"
     
+
+    def isBad(self,crate,slot,femch):
+        thischan = lartfpos(crate,slot,femch)
+        if ( (thischan in self.baddict) == True):
+            badlist = self.baddict[thischan]
+            badtxt = ""
+            for n in badlist:
+                badtxt += "Run: "+str(n[0])+" RMS: "+str(n[1])+"\t"
+            badtxt += "\n"
+            print badtxt
+        else:
+            print "No!"
+
+
+    def plotBad(self,crate,slot,femch):
+        thischan = lartfpos(crate,slot,femch)
+        if ( (thischan in self.baddict) == True):
+            badlist = self.baddict[thischan]
+            runlist = []
+            rmslist = []
+            for n in badlist:
+                runlist.append(int(n[0]))
+                rmslist.append(float(n[1]))
+            plt.plot(runlist,rmslist,'ro')
+            plt.title("RMS Value for (%i %i %i) When Found Bad"%(crate,slot,femch),fontsize=18)
+            plt.xlabel("Run Number",fontsize=18)
+            plt.ylabel("RMS Noise [ADCs]",fontsize=18)
+            plt.show()
+        else:
+            print "Channel not bad."
