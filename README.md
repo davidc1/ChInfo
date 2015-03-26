@@ -2,6 +2,7 @@
 
 ## Dependencies
    * numpy
+   * matplotlib
 
 ## Load tool
 ```
