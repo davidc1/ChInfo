@@ -71,7 +71,7 @@ For example:
 If a channel is bad "isBad" prints out text showing at what runs the channel was 
 bad and the RMS noise values measured.
 The "plotBad" function brings up a plot showing the RMS value for runs in which
-the channel was found to be bad. (like this: http://www.nevis.columbia.edu/~dcaratelli/showandtell/BadInfo.png)
+the channel was found to be bad.
 ```
 chinfo.isBad(4,5,1)
 chinfo.plotBad(4,5,1)
