@@ -120,6 +120,8 @@ class ChanInfo():
             success += 1
         # dictionary for bad channels: [crate,slot,femch] -> [ [Run #, RMS], [Run #, RMS], ... ]
         self.baddict = {}
+        # List that stores which runs we have info for
+        self.runlist = []
         self.makeBadList()
         # dictionary mapping [crate,slot,femch] -> LArSoft Channel
         self.lardict = [{},{},{}]
@@ -127,6 +129,8 @@ class ChanInfo():
         self.chandict = {}
         if (success == 3):
             self.makeDictionary()
+        else:
+            print "Files fnal_map*.txt not found. Data not loaded."
 
 
     def makeDictionary(self):
@@ -177,7 +181,14 @@ class ChanInfo():
     def makeBadList(self):
 
         # Start by compiling list of run/subrun numbers to be scanned
-        run = [ [ 2, 0, 9 ], [ 3, 0, 9 ], [ 5 ], [ 5, 0, 15 ], [ 28, 0, 10 ], [ 62, 0, 14 ], [ 83, 0, 10 ], [ 84, 0, 16 ], [ 95, 0, 19 ], [ 95, 44, 55 ], [ 95, 67, 76 ], [ 95, 85, 94 ], [ 95, 100, 109 ], [ 95, 120, 132 ], [ 95, 157, 166 ], [ 95, 174, 187 ], [ 95, 198, 207 ], [ 114, 0, 20 ], [ 114, 110, 130 ], [ 114, 275, 295 ], [ 114, 400, 420 ], [ 114, 640, 660 ], [ 114, 755, 775 ], [ 114, 865, 885 ], [ 115, 110, 130 ], [ 115, 220, 240 ], [ 115, 365, 385 ], [ 115, 475, 495 ], [ 115, 620, 640 ], [ 115, 850, 870 ], [ 115, 980, 1000 ], [ 117, 0, 20 ], [ 117, 115, 135 ], [ 119, 0, 20 ], [ 119, 110, 130 ], [ 119, 230, 250 ], [ 119, 350, 370 ], [ 121, 0, 20 ], [ 126, 0, 11 ], [ 128, 0, 14 ], [ 130, 0, 8 ], [ 131, 0, 11 ], [ 131, 14, 25 ], [ 131, 28, 37 ], [ 131, 42, 52 ], [ 131, 55, 67 ], [ 134, 0, 10 ] ]
+        run = [ [ 2, 0, 9 ], [ 3, 0, 9 ], [ 5, 0, 15 ], [ 28, 0, 10 ], [ 62, 0, 14 ], [ 83, 0, 10 ], [ 84, 0, 16 ], [ 95, 0, 19 ], [ 114, 0, 20 ], [ 114, 110, 130 ], [ 114, 275, 295 ], [ 114, 400, 420 ], [ 114, 640, 660 ], [ 114, 755, 775 ], [ 114, 865, 885 ], [ 115, 110, 130 ], [ 115, 220, 240 ], [ 115, 365, 385 ], [ 115, 475, 495 ], [ 115, 620, 640 ], [ 115, 850, 870 ], [ 115, 980, 1000 ], [ 117, 0, 20 ], [ 117, 115, 135 ], [ 119, 0, 20 ], [ 119, 110, 130 ], [ 119, 230, 250 ], [ 119, 350, 370 ], [ 121, 0, 20 ], [ 126, 0, 11 ], [ 128, 0, 14 ], [ 130, 0, 8 ], [ 131, 0, 11 ], [ 131, 14, 25 ], [ 131, 28, 37 ], [ 131, 42, 52 ], [ 131, 55, 67 ], [ 134, 0, 10 ] ]
+        
+        # Make a list of all Runs that have been scanned for bad channels
+        self.runlist = []
+        for j in run:
+            if ( (int(j[0]) in self.runlist) == False ):
+                self.runlist.append(int(j[0]))
+
         # then open the respective files:
         for i in run:
             if len(i) == 1:
@@ -316,11 +327,8 @@ class ChanInfo():
         thischan = lartfpos(crate,slot,femch)
         if ( (thischan in self.baddict) == True):
             badlist = self.baddict[thischan]
-            badtxt = ""
             for n in badlist:
-                badtxt += "Run: "+str(n[0])+" RMS: "+str(n[1])+"\t"
-            badtxt += "\n"
-            print badtxt
+                print "Run: %03i\tRMS: %.01f"%(n[0],n[1])
         else:
             print "No!"
 
@@ -334,10 +342,31 @@ class ChanInfo():
             for n in badlist:
                 runlist.append(int(n[0]))
                 rmslist.append(float(n[1]))
-            plt.plot(runlist,rmslist,'ro')
-            plt.title("RMS Value for (%i %i %i) When Found Bad"%(crate,slot,femch),fontsize=18)
+            plt.plot(runlist,rmslist,'ro',markersize=10)
+            plt.title("RMS Value for (%i, %i, %i) When Found Bad"%(crate,slot,femch),fontsize=18)
             plt.xlabel("Run Number",fontsize=18)
             plt.ylabel("RMS Noise [ADCs]",fontsize=18)
             plt.show()
         else:
             print "Channel not bad."
+
+
+    def plotBadBool(self,crate,slot,femch):
+        thischan = lartfpos(crate,slot,femch)
+        # default to all zeros.
+        isbad = np.zeros(len(self.runlist))
+        if ( (thischan in self.baddict) == True):
+            badlist = self.baddict[thischan]
+            for n in badlist:
+                # get the run number.
+                # then the index of the run number
+                # in the self.runlist vector
+                # and assign 1.
+                idx = self.runlist.index(int(n[0]))
+                isbad[idx] = 1
+        plt.plot(np.array(self.runlist),isbad,'r-',linewidth=3)
+        plt.ylim([-0.1,1.1])
+        plt.xlabel("Run Number",fontsize=18)
+        plt.ylabel("Is Bad?",fontsize=18)
+        plt.title("Noise History for Channel (%i, %i, %i)"%(crate,slot,femch),fontsize=18)
+        plt.show()
