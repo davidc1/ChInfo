@@ -39,8 +39,8 @@ class lartfpos:
 
 # Defining a class for the info on a LArTF Channel itself
 class larchan:
-    def __init__(self,larch,crate,slot,femch,larwire,plane):
-        self.larch  = larch
+    def __init__(self,larch,crate,slot,femch,larwire,plane,ft,conn):
+        self.larch  = larch+1
         self.crate = crate
         self.slot = slot
         self.femch = femch
@@ -51,6 +51,8 @@ class larchan:
             self.wirenum = 2399 - self.larwire
         elif ( self.plane == 2 ):
             self.wirenum = 3455 - self.larwire
+        self.ft = ft
+        self.conn = conn
         self.length = 0
         self.noise = []
         self.ampgain = []
@@ -111,6 +113,18 @@ class larchan:
     def getgainfact(self):
         return self.gainfact
 
+    def __str__(self):
+        return "Crate %d. Slot %d. Femch %d"%(self.crate,self.slot,self.femch)
+    def __eq__(self,other):
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        else:
+            return False
+    def __hash__(self):
+        return hash((self.crate,self.slot,self.femch))
+
+
+
 class ChanInfo():
     def __init__(self):
         # Load default text files if they can be found
@@ -153,12 +167,12 @@ class ChanInfo():
             infile = open(self.fname[n],'r')
             # load file contents to numpy array
             ch = np.loadtxt(infile,delimiter=' ',
-                            dtype={'names':('crate','slot','femch','larch','larwire','plane','length',
+                            dtype={'names':('crate','slot','femch','larch','larwire','plane','ft','conn','length',
                                             'rms01','rms03','rms11','rms13','rms21','rms23','rms31','rms33',
                                             'amp01','amp03','amp11','amp13','amp21','amp23','amp31','amp33',
                                             'area01','area03','area11','area13','area21','area23','area31','area33',
                                             'gainnorm'),
-                                   'formats':('u1','u1','u2','u2','u2','u1','f3',
+                                   'formats':('u1','u1','u2','u2','u2','u1','u1','S4','f3',
                                               'f2','f2','f2','f2','f2','f2','f2','f2',
                                               'f2','f2','f2','f2','f2','f2','f2','f2',
                                               'f2','f2','f2','f2','f2','f2','f2','f2',
@@ -168,7 +182,7 @@ class ChanInfo():
                 # Set [crate,slot,femch] position for dictonary
                 thischan = lartfpos(ch['crate'][i],ch['slot'][i],ch['femch'][i])
                 # now create larsoft wire object
-                thislar = larchan(ch['larch'][i],ch['crate'][i],ch['slot'][i],ch['femch'][i],ch['larwire'][i],ch['plane'][i])
+                thislar = larchan(ch['larch'][i],ch['crate'][i],ch['slot'][i],ch['femch'][i],ch['larwire'][i],ch['plane'][i],ch['ft'][i],ch['conn'][i])
                 thislar.setlength(ch['length'][i])
                 thisnoise = [ [ch['rms01'][i],ch['rms03'][i]], [ch['rms11'][i],ch['rms13'][i]], [ch['rms21'][i],ch['rms23'][i]], [ch['rms31'][i],ch['rms33'][i]] ]
                 thisamp   = [ [ch['amp01'][i],ch['amp03'][i]], [ch['amp11'][i],ch['amp13'][i]], [ch['amp21'][i],ch['amp23'][i]], [ch['amp31'][i],ch['amp33'][i]] ]
