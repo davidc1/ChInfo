@@ -46,6 +46,11 @@ class larchan:
         self.femch = femch
         self.larwire = larwire
         self.plane = plane
+        self.wirenum = 0
+        if ( (self.plane==1) or (self.plane==0) ):
+            self.wirenum = 2399 - self.larwire
+        elif ( self.plane == 2 ):
+            self.wirenum = 3455 - self.larwire
         self.length = 0
         self.noise = []
         self.ampgain = []
@@ -73,8 +78,10 @@ class larchan:
         return self.femch
     def getCSF(self):
         return [self.crate,self.slot,self.femch]
-    def getwire(self):
+    def getlarwire(self):
         return sef.larwire
+    def getwirenum(self):
+        return self.wirenum
     def getplane(self):
         return self.plane
     def getlength(self):

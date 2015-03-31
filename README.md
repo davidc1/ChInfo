@@ -24,6 +24,7 @@ a "larchan" object contains:
 - crate
 - femch
 - larwire
+- wirenum -> what is used to plot things in Taritree's viewer
 - plane
 - length [cm]
 + noise, amplitude gain and area gain arrays.
@@ -36,6 +37,8 @@ a "larchan" object contains:
 - gainfact (fraction of charge the channel sees from the pulser. 1 or 8/7)
 ```
 lchan = chinfo.getlarch(5,5,31)
+lchan.length
+#or
 lchan.getlength()
 lchan.getnoise(0,0)
 lchan.getampgain(1,1)
