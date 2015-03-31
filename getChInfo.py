@@ -40,7 +40,7 @@ class lartfpos:
 # Defining a class for the info on a LArTF Channel itself
 class larchan:
     def __init__(self,larch,crate,slot,femch,larwire,plane,ft,conn):
-        self.larch  = larch+1
+        self.larch  = larch
         self.crate = crate
         self.slot = slot
         self.femch = femch
