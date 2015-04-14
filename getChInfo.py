@@ -39,7 +39,7 @@ class lartfpos:
 
 # Defining a class for the info on a LArTF Channel itself
 class larchan:
-    def __init__(self,larch,crate,slot,femch,larwire,plane,ft,conn):
+    def __init__(self,larch,crate,slot,femch,larwire,plane,ft,conn,mboard,asic):
         self.larch  = larch
         self.crate = crate
         self.slot = slot
@@ -53,6 +53,8 @@ class larchan:
             self.wirenum = 3455 - self.larwire
         self.ft = ft
         self.conn = conn
+        self.mboard = mboard
+        self.asic = asic
         self.length = 0
         self.noise = []
         self.ampgain = []
@@ -152,7 +154,13 @@ class ChanInfo():
             self.makeDictionary()
         else:
             print "Files fnal_map*.txt not found. Data not loaded."
+        self.verbose = True
 
+    def setVerbose(self,on):
+        if (on):
+            self.verbose = True
+        else:
+            self.verbose = False
 
     def makeDictionary(self):
         # make sure input file has been specified
@@ -167,12 +175,12 @@ class ChanInfo():
             infile = open(self.fname[n],'r')
             # load file contents to numpy array
             ch = np.loadtxt(infile,delimiter=' ',
-                            dtype={'names':('crate','slot','femch','larch','larwire','plane','ft','conn','length',
+                            dtype={'names':('crate','slot','femch','larch','larwire','plane','ft','conn','mboard','asic','length',
                                             'rms01','rms03','rms11','rms13','rms21','rms23','rms31','rms33',
                                             'amp01','amp03','amp11','amp13','amp21','amp23','amp31','amp33',
                                             'area01','area03','area11','area13','area21','area23','area31','area33',
                                             'gainnorm'),
-                                   'formats':('u1','u1','u2','u2','u2','u1','u1','S4','f3',
+                                   'formats':('u1','u1','u2','u2','u2','u1','u1','S4','u1','u1','f3',
                                               'f2','f2','f2','f2','f2','f2','f2','f2',
                                               'f2','f2','f2','f2','f2','f2','f2','f2',
                                               'f2','f2','f2','f2','f2','f2','f2','f2',
@@ -182,7 +190,7 @@ class ChanInfo():
                 # Set [crate,slot,femch] position for dictonary
                 thischan = lartfpos(ch['crate'][i],ch['slot'][i],ch['femch'][i])
                 # now create larsoft wire object
-                thislar = larchan(ch['larch'][i],ch['crate'][i],ch['slot'][i],ch['femch'][i],ch['larwire'][i],ch['plane'][i],ch['ft'][i],ch['conn'][i])
+                thislar = larchan(ch['larch'][i],ch['crate'][i],ch['slot'][i],ch['femch'][i],ch['larwire'][i],ch['plane'][i],ch['ft'][i],ch['conn'][i],ch['mboard'][i],ch['asic'][i])
                 thislar.setlength(ch['length'][i])
                 thisnoise = [ [ch['rms01'][i],ch['rms03'][i]], [ch['rms11'][i],ch['rms13'][i]], [ch['rms21'][i],ch['rms23'][i]], [ch['rms31'][i],ch['rms33'][i]] ]
                 thisamp   = [ [ch['amp01'][i],ch['amp03'][i]], [ch['amp11'][i],ch['amp13'][i]], [ch['amp21'][i],ch['amp23'][i]], [ch['amp31'][i],ch['amp33'][i]] ]
@@ -253,7 +261,7 @@ class ChanInfo():
                     else:
                         self.baddict[thispos] = [badinfo]
                 fin_low.close()
-
+        
         print "Done filling bad channel list! Number of entries: ",len(self.baddict)
 
 
@@ -268,7 +276,7 @@ class ChanInfo():
         # now check that this [crate,slot,femch] maps to a larchannel
         x = lartfpos(crate,slot,femch)
         if ( (x in self.lardict[v]) == False):
-            raise ValueError("[Crate,Slot,Femch] Not found in Dictionary")
+            raise ValueError("[%i,%i,%i] Not found in Dictionary"%(crate,slot,femch))
         # If all is good, return the larch object
         return x,v
         
@@ -278,70 +286,80 @@ class ChanInfo():
             x,v = self.isinputvalid(crate,slot,femch,r)
             return self.lardict[v][x]
         except ValueError as detail:
-            print "Error: ",detail
+            if (self.verbose):
+                print "Error: ",detail
 
     def getlarchnum(self,crate,slot,femch,r=100):
         try:
             x,v = self.isinputvalid(crate,slot,femch,r)
             return self.lardict[v][x].getlarch()
         except ValueError as detail:
-            print "Error: ",detail
+            if (self.verbose):
+                print "Error: ",detail
 
     def getwirenum(self,crate,slot,femch,r=100):
         try:
             x,v = self.isinputvalid(crate,slot,femch,r)
             return self.lardict[v][x].getwire()
         except ValueError as detail:
-            print "Error: ",detail
+            if (self.verbose):
+                print "Error: ",detail
 
     def getplane(self,crate,slot,femch,r=100):
         try:
             x,v = self.isinputvalid(crate,slot,femch,r)
             return self.lardict[v][x].getplane()
         except ValueError as detail:
-            print "Error: ",detail
+            if (self.verbose):
+                print "Error: ",detail
 
     def getlength(self,crate,slot,femch,r=100):
         try:
             x,v = self.isinputvalid(crate,slot,femch,r)
             return self.lardict[v][x].getlength()
         except ValueError as detail:
-            print "Error: ",detail
+            if (self.verbose):
+                print "Error: ",detail
 
     def getnoise(self,crate,slot,femch,gain,shaping,r=100):
         try:
             x,v = self.isinputvalid(crate,slot,femch,r)
             return self.lardict[v][x].getnoise(gain,shaping)
         except ValueError as detail:
-            print "Error: ",detail
+            if (self.verbose):
+                print "Error: ",detail
 
     def getampgain(self,crate,slot,femch,gain,shaping,r=100):
         try:
             x,v = self.isinputvalid(crate,slot,femch,r)
             return self.lardict[v][x].getampgain(gain,shaping)
         except ValueError as detail:
-            print "Error: ",detail
+            if (self.verbose):
+                print "Error: ",detail
 
     def getareagain(self,crate,slot,femch,gain,shaping,r=100):
         try:
             x,v = self.isinputvalid(crate,slot,femch,r)
             return self.lardict[v][x].getareagain(gain,shaping)
         except ValueError as detail:
-            print "Error: ",detail
+            if (self.verbose):
+                print "Error: ",detail
 
     def getgainfact(self,crate,slot,femch,r=100):
         try:
             x,v = self.isinputvalid(crate,slot,femch,r)
             return self.lardict[v][x].getgainfact()
         except ValueError as detail:
-            print "Error: ",detail
+            if (self.verbose):
+                print "Error: ",detail
 
     def getCSF(self,larch):
         if (larch in self.chandict):
             chch = self.chandict[larch]
             return [chch.crate,chch.slot,chch.femch]
         else:
-            print "Channel not found!"
+            if (self.verbose):
+                print "Channel not found!"
     
 
     def isBad(self,crate,slot,femch):

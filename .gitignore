@@ -1,5 +1,8 @@
 *.pyc
+*.pdf
+*.ipynb
 *.o
+*.mp4
 *Cint.h
 *Cint.cc
 .depend
@@ -11,6 +14,7 @@
 *.dat
 *.info
 *~
+*#
 *.pcm
 *.swp
 *.csv
